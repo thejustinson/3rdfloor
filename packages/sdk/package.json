@@ -36,9 +36,13 @@
     "dist",
     "README.md"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc -p tsconfig.build.json --noEmit"
+    "typecheck": "tsc -p tsconfig.build.json --noEmit",
+    "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
     "@solana/spl-token": ">=0.4.0",
