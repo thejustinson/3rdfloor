@@ -1130,8 +1130,8 @@ export default function DocsPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [codeTab, setCodeTab] = useState<
-    'curl' | 'typescript' | 'nextjs' | 'env'
-  >('curl');
+    'sdk' | 'curl' | 'typescript' | 'nextjs' | 'env'
+  >('sdk');
   const [sandboxKey, setSandboxKey] = useState('');
   const [maskKey, setMaskKey] = useState(false);
   const [copiedPage, setCopiedPage] = useState(false);
@@ -1261,6 +1261,9 @@ export default function DocsPage() {
   }
 
   function buildQuickstartCode() {
+    if (codeTab === 'sdk') {
+      return `import { ThirdFloor } from "@3rdfloor/sdk";\n\nconst rwa = new ThirdFloor({\n  apiKey: "${displayedKey}",\n  baseUrl: "http://localhost:3000/api/v1",\n});\n\n// 1. Onboard an institutional investor profile\nconst investor = await rwa.investors.create({\n  name: "Apex Institutional Partners LP",\n  email: "treasury@apex-lp.io",\n  investorType: "institutional",\n  jurisdiction: "US",\n});\n\n// 2. Approve KYC & whitelist their Solana wallet for Token-2022 ATA settlement\nconst kyc = await rwa.investors.verifyKyc(investor.id, {\n  kycStatus: "approved",\n  investorType: "qualified_purchaser",\n  walletAddress: "GF1YRBkxQNrN2T9nojHdLEy7v4TgFH38T6j4sMbaAipX",\n  provider: "sumsub",\n  referenceId: "inq_98a7b6c5d4e3",\n});\n\nconsole.log("Eligible for on-chain settlement:", kyc.eligibleForSettlement);`;
+    }
     if (codeTab === 'env') {
       return `# .env.local\nNEXT_PUBLIC_3RDFLOOR_API_URL="http://localhost:3000/api/v1"\nTHREEFLOOR_SECRET_KEY="${displayedKey}"`;
     }
@@ -1268,13 +1271,51 @@ export default function DocsPage() {
       return `// 1. Onboard the investor profile\nconst onboardRes = await fetch("http://localhost:3000/api/v1/investors", {\n  method: "POST",\n  headers: {\n    "Authorization": "Bearer ${displayedKey}",\n    "Content-Type": "application/json",\n  },\n  body: JSON.stringify({\n    name: "Apex Institutional Partners LP",\n    email: "treasury@apex-lp.io",\n    investorType: "institutional",\n    jurisdiction: "US",\n  }),\n});\nconst { data: investor } = await onboardRes.json();\n\n// 2. Approve KYC & whitelist their Solana wallet for Token-2022 settlement\nconst kycRes = await fetch(\`http://localhost:3000/api/v1/investors/\${investor.id}/kyc\`, {\n  method: "POST",\n  headers: {\n    "Authorization": "Bearer ${displayedKey}",\n    "Content-Type": "application/json",\n  },\n  body: JSON.stringify({\n    kycStatus: "approved",\n    investorType: "qualified_purchaser",\n    walletAddress: "GF1YRBkxQNrN2T9nojHdLEy7v4TgFH38T6j4sMbaAipX",\n    provider: "sumsub",\n    referenceId: "inq_98a7b6c5d4e3",\n  }),\n});\nconst { data: kyc } = await kycRes.json();\nconsole.log("Eligible for on-chain settlement:", kyc.eligibleForSettlement);`;
     }
     if (codeTab === 'nextjs') {
-      return `// app/actions/compliance.ts\n'use server';\n\nexport async function approveInvestorKyc(investorId: number, walletAddress: string) {\n  const res = await fetch(\`http://localhost:3000/api/v1/investors/\${investorId}/kyc\`, {\n    method: "POST",\n    headers: {\n      Authorization: \`Bearer \${process.env.THREEFLOOR_SECRET_KEY}\`,\n      "Content-Type": "application/json",\n    },\n    body: JSON.stringify({\n      kycStatus: "approved",\n      walletAddress,\n      provider: "persona",\n    }),\n    cache: "no-store",\n  });\n  return res.json();\n}`;
+      return `// app/actions/compliance.ts\n'use server';\nimport { ThirdFloor } from "@3rdfloor/sdk";\n\nconst rwa = new ThirdFloor({ apiKey: process.env.THREEFLOOR_SECRET_KEY! });\n\nexport async function approveInvestorKyc(investorId: number, walletAddress: string) {\n  return rwa.investors.verifyKyc(investorId, {\n    kycStatus: "approved",\n    walletAddress,\n    provider: "persona",\n  });\n}`;
     }
     return `# Approve investor KYC & whitelist their Solana wallet for Token-2022 ATA delivery\ncurl -X POST "http://localhost:3000/api/v1/investors/1/kyc" \\\n  -H "Authorization: Bearer ${displayedKey}" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "kycStatus": "approved",\n    "investorType": "qualified_purchaser",\n    "jurisdiction": "US",\n    "walletAddress": "GF1YRBkxQNrN2T9nojHdLEy7v4TgFH38T6j4sMbaAipX",\n    "provider": "sumsub",\n    "referenceId": "inq_98a7b6c5d4e3"\n  }'`;
   }
 
   function buildEndpointSnippet(ep: EndpointDoc) {
     const url = `http://localhost:3000${ep.path}`;
+    if (codeTab === 'sdk') {
+      const header = `import { ThirdFloor } from "@3rdfloor/sdk";\n\nconst rwa = new ThirdFloor({\n  apiKey: "${displayedKey}",\n});\n\n`;
+      const bodyStr = JSON.stringify(ep.sampleBody || {}, null, 2);
+      switch (ep.id) {
+        case 'list-investors':
+          return `${header}const investors = await rwa.investors.list();`;
+        case 'create-investor':
+          return `${header}const investor = await rwa.investors.create(${bodyStr});`;
+        case 'get-investor-kyc':
+          return `${header}const kyc = await rwa.investors.getKyc(1);`;
+        case 'submit-investor-kyc':
+          return `${header}const kyc = await rwa.investors.verifyKyc(1, ${bodyStr});`;
+        case 'get-investor':
+          return `${header}const investor = await rwa.investors.get(1);`;
+        case 'update-investor':
+          return `${header}const updated = await rwa.investors.update(1, ${bodyStr});`;
+        case 'list-assets':
+          return `${header}const assets = await rwa.assets.list();`;
+        case 'create-asset':
+          return `${header}const asset = await rwa.assets.create(${bodyStr});`;
+        case 'get-asset':
+          return `${header}const asset = await rwa.assets.get(1);`;
+        case 'list-offerings':
+          return `${header}const offerings = await rwa.offerings.list();`;
+        case 'create-offering':
+          return `${header}const offering = await rwa.offerings.create(${bodyStr});`;
+        case 'update-offering-status':
+          return `${header}const result = await rwa.offerings.deployToken(1);`;
+        case 'create-subscription':
+          return `${header}const sub = await rwa.subscriptions.create(1, ${bodyStr});`;
+        case 'settle-subscription':
+          return `${header}const settled = await rwa.subscriptions.settle(12);`;
+        case 'get-holdings':
+          return `${header}const capTable = await rwa.offerings.getHoldings(1);`;
+        case 'create-distribution':
+          return `${header}const payout = await rwa.offerings.createDistribution(1, ${bodyStr});`;
+      }
+    }
     if (codeTab === 'typescript' || codeTab === 'nextjs') {
       if (ep.method === 'GET') {
         return `const response = await fetch("${url}", {\n  method: "GET",\n  headers: {\n    "Authorization": "Bearer ${displayedKey}",\n    "Content-Type": "application/json",\n  },\n});\n\nconst { data } = await response.json();`;
@@ -1373,6 +1414,15 @@ export default function DocsPage() {
                 <span className="size-1.5 rounded-full bg-[#0A0A0A]" />
                 <span>Sandbox</span>
               </button>
+              <Link
+                href="/test-sdk"
+                className="text-[#6B6B6B] hover:text-[#0A0A0A] transition-colors flex items-center gap-1.5"
+              >
+                <span>Test Lab</span>
+                <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#0A0A0A] text-white">
+                  SDK
+                </span>
+              </Link>
               <Link
                 href="/explore"
                 className="text-[#6B6B6B] hover:text-[#0A0A0A] transition-colors"
@@ -1793,26 +1843,36 @@ export default function DocsPage() {
 
               <section id="quick-env-setup" className="scroll-mt-24 space-y-4">
                 <h2 className="text-[22px] font-medium tracking-[-0.02em] leading-[1.25] text-[#0A0A0A] text-balance">
-                  Quickstart: environment &amp; first KYC API call
+                  Quickstart: install <code className="font-mono text-[19px]">@3rdfloor/sdk</code> &amp; run your first KYC call
                 </h2>
                 <p className="text-[#404040] text-pretty">
-                  Generate a workspace secret key (<code className={inlineCode}>3f_live_...</code>)
-                  under <code className={inlineCode}>/org/[id]/developers</code>,
-                  then use any of the snippets below to onboard an institutional
-                  investor and approve their KYC &amp; Solana wallet whitelist:
+                  Install the official TypeScript SDK (<code className={inlineCode}>@3rdfloor/sdk</code>)
+                  or call the REST API directly using a workspace secret key (
+                  <code className={inlineCode}>3f_live_...</code>) generated in{' '}
+                  <code className={inlineCode}>/org/[id]/developers</code>:
                 </p>
 
                 <CodeBlock
+                  title="Terminal"
+                  language="bash"
+                  code={`npm install @3rdfloor/sdk`}
+                  surface="light"
+                />
+
+                <CodeBlock
                   tabs={[
+                    { id: 'sdk', label: '@3rdfloor/sdk' },
                     { id: 'curl', label: 'cURL' },
-                    { id: 'typescript', label: 'TypeScript' },
+                    { id: 'typescript', label: 'TypeScript (fetch)' },
                     { id: 'nextjs', label: 'Next.js' },
                     { id: 'env', label: '.env.local' },
                   ]}
                   activeTab={codeTab}
                   onTabChange={(id) => setCodeTab(id as any)}
                   title={
-                    codeTab === 'curl'
+                    codeTab === 'sdk'
+                      ? '@3rdfloor/sdk'
+                      : codeTab === 'curl'
                       ? 'Terminal'
                       : codeTab === 'env'
                       ? '.env.local'
@@ -3210,20 +3270,29 @@ curl -X POST "http://localhost:3000/api/v1/subscriptions/12/settle" \\
 
                     <CodeBlock
                       tabs={[
+                        { id: 'sdk', label: '@3rdfloor/sdk' },
                         { id: 'curl', label: 'cURL' },
-                        { id: 'typescript', label: 'TypeScript' },
+                        { id: 'typescript', label: 'TypeScript (fetch)' },
                       ]}
                       activeTab={
-                        codeTab === 'typescript' ? 'typescript' : 'curl'
+                        codeTab === 'sdk'
+                          ? 'sdk'
+                          : codeTab === 'typescript'
+                          ? 'typescript'
+                          : 'curl'
                       }
                       onTabChange={(id) => setCodeTab(id as any)}
                       title={
-                        codeTab === 'typescript'
+                        codeTab === 'sdk'
+                          ? '@3rdfloor/sdk'
+                          : codeTab === 'typescript'
                           ? `${ep.method} ${ep.path}`
                           : 'Terminal'
                       }
                       language={
-                        codeTab === 'typescript' ? 'typescript' : 'bash'
+                        codeTab === 'sdk' || codeTab === 'typescript'
+                          ? 'typescript'
+                          : 'bash'
                       }
                       code={buildEndpointSnippet(ep)}
                       canMaskKey

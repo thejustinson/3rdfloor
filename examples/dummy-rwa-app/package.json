@@ -1,0 +1,14 @@
+{
+  "name": "dummy-rwa-app",
+  "version": "1.0.0",
+  "description": "Dummy project to test and demonstrate @3rdfloor/sdk integration",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:sdk": "tsx test-sdk.ts",
+    "test:live": "tsx test-live-server.ts"
+  },
+  "dependencies": {
+    "@3rdfloor/sdk": "file:../../packages/sdk"
+  }
+}

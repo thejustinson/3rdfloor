@@ -311,6 +311,15 @@ export default function Home() {
             <Link href="/docs" className="hover:opacity-60 transition-opacity">
               Documentation
             </Link>
+            <Link
+              href="/test-sdk"
+              className="hover:opacity-60 transition-opacity flex items-center gap-1.5"
+            >
+              <span>Test Lab</span>
+              <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#0A0A0A] text-white">
+                SDK
+              </span>
+            </Link>
             <a href="#api" className="hover:opacity-60 transition-opacity">
               REST API
             </a>

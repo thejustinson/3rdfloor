@@ -1,0 +1,63 @@
+{
+  "name": "@3rdfloor/sdk",
+  "version": "1.0.0",
+  "description": "Official TypeScript/Node.js SDK and Solana SPL Token-2022 RWA primitives for 3rdfloor",
+  "keywords": [
+    "3rdfloor",
+    "rwa",
+    "real-world-assets",
+    "tokenization",
+    "solana",
+    "token-2022",
+    "kyc",
+    "securities"
+  ],
+  "homepage": "https://github.com/thejustinson/3rdfloor",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thejustinson/3rdfloor.git",
+    "directory": "packages/sdk"
+  },
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./solana": {
+      "types": "./dist/solana/index.d.ts",
+      "default": "./dist/solana/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit"
+  },
+  "peerDependencies": {
+    "@solana/spl-token": ">=0.4.0",
+    "@solana/spl-token-metadata": ">=0.1.0",
+    "@solana/web3.js": ">=1.90.0",
+    "bs58": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@solana/spl-token": {
+      "optional": true
+    },
+    "@solana/spl-token-metadata": {
+      "optional": true
+    },
+    "@solana/web3.js": {
+      "optional": true
+    },
+    "bs58": {
+      "optional": true
+    }
+  }
+}

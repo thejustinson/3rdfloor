@@ -19,7 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@3rdfloor/sdk": ["./packages/sdk/src/index.ts"],
+      "@3rdfloor/sdk/solana": ["./packages/sdk/src/solana/index.ts"]
     }
   },
   "include": [
@@ -30,5 +32,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "packages/sdk/dist"]
 }
