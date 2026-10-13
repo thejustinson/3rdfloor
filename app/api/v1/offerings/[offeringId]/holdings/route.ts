@@ -68,14 +68,24 @@ export async function GET(
       };
     });
 
+    const mappedHolders = holdings.map((h) => ({
+      investorWallet: h.investorWallet || '',
+      tokenBalance: h.tokenQuantity,
+      ownershipPercentage: h.ownershipPercentage ?? 0,
+      totalInvestedUsd: h.capitalSettledUsd,
+      lastTransactionSignature: h.transactionSignature,
+    }));
+
     return apiSuccess({
       offeringId: offering.id,
       offeringName: offering.name,
       tokenSymbol: offering.tokenSymbol,
       mintAddress: offering.tokens?.[0]?.mintAddress || null,
       totalSupply,
+      allocatedTokens: totalAllocatedTokens,
       totalAllocatedTokens,
       holdersCount: holdings.length,
+      holders: mappedHolders,
       holdings,
     });
   } catch (error: any) {

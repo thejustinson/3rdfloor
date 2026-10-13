@@ -305,14 +305,14 @@ entitlements.forEach((e) => {
 
 export default function SdkTestLabPage() {
   const [activeStepIndex, setActiveStepIndex] = useState(0);
-  const [apiKey, setApiKey] = useState('3f_live_9a8b7c6d5e4f3a2b1c0d9e8f');
+  const [apiKey, setApiKey] = useState('3f_live_test_lab_8f9e0a1b2c3d4e5f6a7b8c9d');
   const [customInputs, setCustomInputs] = useState<Record<string, any>>({});
   const [pipelineState, setPipelineState] = useState<Record<string, any>>({
     assetId: 1,
     offeringId: 1,
     investorId: 1,
     walletAddress: 'GF1YRBkxQNrN2T9nojHdLEy7v4TgFH38T6j4sMbaAipX',
-    mintAddress: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU',
+    mintAddress: 'HAVJNQiSrMPCTrBKmRv4bBYvz4cBXsKBwMdJH3K72KiW',
   });
 
   const [stepResults, setStepResults] = useState<
@@ -357,6 +357,9 @@ export default function SdkTestLabPage() {
       setStepResults((prev) => ({ ...prev, [step.id]: res }));
       if (res.updatedState) {
         setPipelineState((prev) => ({ ...prev, ...res.updatedState }));
+        if (res.updatedState.apiKey && res.updatedState.apiKey !== apiKey) {
+          setApiKey(res.updatedState.apiKey);
+        }
       }
       return res;
     } finally {
@@ -807,20 +810,36 @@ export default function SdkTestLabPage() {
                     <ExternalLink className="size-3" />
                   </a>
                 )}
-                {currentResult.output?.solanaExplorerUrl && (
+                {currentResult.output?.subscription?.transactionSignature && (
                   <a
-                    href={currentResult.output.solanaExplorerUrl}
+                    href={`https://explorer.solana.com/tx/${currentResult.output.subscription.transactionSignature}?cluster=devnet`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 text-[12px] font-mono text-[#0A0A0A] hover:underline"
                   >
-                    <span>View Tx on Solana Explorer</span>
+                    <span>View Settle Tx on Solana Explorer</span>
                     <ExternalLink className="size-3" />
                   </a>
                 )}
               </div>
 
               <div className="p-6 bg-white space-y-4">
+                {currentResult.error && (
+                  <div className="p-4 rounded-xl border border-red-200 bg-red-50 text-[13px] text-red-900 space-y-1">
+                    <div className="font-semibold flex items-center gap-2">
+                      <span>Execution Error [{currentResult.error.code}]</span>
+                      {currentResult.error.status && (
+                        <span className="font-mono text-xs opacity-75">
+                          HTTP {currentResult.error.status}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-red-700 leading-relaxed font-mono text-[12.5px]">
+                      {currentResult.error.message}
+                    </div>
+                  </div>
+                )}
+
                 <div className="text-[13px] text-[#525252]">
                   <strong className="text-[#0A0A0A]">Summary:</strong>{' '}
                   {currentResult.whatWasTested}

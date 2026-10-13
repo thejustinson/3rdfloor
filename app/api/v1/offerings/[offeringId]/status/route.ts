@@ -104,6 +104,13 @@ export async function POST(
     return apiSuccess({
       offering: updatedOffering,
       token: deployedTokenRecord,
+      tokenDeployment: deployedTokenRecord
+        ? {
+            mintAddress: deployedTokenRecord.mintAddress,
+            transactionSignature: deployedTokenRecord.transactionSignature,
+            solanaExplorerUrl: `https://explorer.solana.com/address/${deployedTokenRecord.mintAddress}?cluster=devnet`,
+          }
+        : null,
     });
   } catch (error: any) {
     return apiError(
